@@ -26,6 +26,7 @@ Map<String, dynamic> _$EventResponseToJson(EventResponse instance) =>
 EventData _$EventDataFromJson(Map<String, dynamic> json) => EventData(
   id: (json['id'] as num).toInt(),
   title: json['title'] as String,
+  description: json['description'] as String,
   image: json['image'] as String,
   imageUrl: json['image_url'] as String,
   eventDate: json['event_date'] as String,
@@ -34,6 +35,7 @@ EventData _$EventDataFromJson(Map<String, dynamic> json) => EventData(
 Map<String, dynamic> _$EventDataToJson(EventData instance) => <String, dynamic>{
   'id': instance.id,
   'title': instance.title,
+  'description': instance.description,
   'image': instance.image,
   'image_url': instance.imageUrl,
   'event_date': instance.eventDate,

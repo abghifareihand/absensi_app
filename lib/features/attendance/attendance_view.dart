@@ -122,6 +122,40 @@ Widget _buildBody(BuildContext context, AttendanceViewModel model) {
         ],
       ),
 
+      // Tampilkan peringatan Fake GPS
+      if (model.isMockLocationDetected)
+        Positioned(
+          top: 100,
+          left: 16,
+          right: 16,
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.red[100],
+              borderRadius: BorderRadius.circular(8),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.warning_amber_rounded, color: Colors.red[700]),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    model.errorMessage,
+                    style: AppFonts.medium.copyWith(color: Colors.red[900], fontSize: 13),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+
       /// Tombol Back di kiri atas
       Positioned(
         top: 40,
@@ -214,11 +248,15 @@ Widget _buildBody(BuildContext context, AttendanceViewModel model) {
                   ),
                   Spacer(),
                   Button.filled(
-                    onPressed: () async {
-                      await model.checkAttendance();
-                    },
-                    label: 'Absen',
+                    onPressed:
+                        model.isMockLocationDetected
+                            ? null
+                            : () async {
+                              await model.checkAttendance();
+                            },
+                    label: model.isMockLocationDetected ? 'Fake GPS Terdeteksi' : 'Absen',
                     isLoading: model.isLoadingPressed,
+                    color: model.isMockLocationDetected ? Colors.grey : AppColors.primary,
                   ),
                   const SizedBox(height: 16.0),
                 ],

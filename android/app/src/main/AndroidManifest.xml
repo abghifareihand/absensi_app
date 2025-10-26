@@ -11,9 +11,9 @@
     <!-- Untuk Android 11 ke atas, jika Anda memerlukan akses penuh ke penyimpanan -->
     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"/>
     <application
-        android:label="Absensi App"
+        android:label="Presensi MU"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/launcher_icon">
         <activity
             android:name=".MainActivity"
             android:exported="true"

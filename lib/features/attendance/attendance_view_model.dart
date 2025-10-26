@@ -33,6 +33,7 @@ class AttendanceViewModel extends BaseViewModel {
   AttendancePointNearest? attendancePointNearest;
   String errorMessage = '';
   bool isLoadingPressed = false;
+  bool isMockLocationDetected = false;
 
   @override
   Future<void> initModel() async {
@@ -54,9 +55,22 @@ class AttendanceViewModel extends BaseViewModel {
       final position = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
       );
+
+      // 🔍 Deteksi lokasi palsu
+      if (position.isMocked) {
+        isMockLocationDetected = true;
+        errorMessage = "Lokasi terdeteksi palsu (Fake GPS aktif)";
+        notifyListeners();
+        return;
+      }
+
+      // Jika lokasi valid
+      isMockLocationDetected = false;
+
       latitude = position.latitude;
       longitude = position.longitude;
       userLocation = LatLng(position.latitude, position.longitude);
+      errorMessage = "";
       notifyListeners();
     } catch (e) {
       errorMessage = "Gagal mendapatkan lokasi: $e";
@@ -95,62 +109,12 @@ class AttendanceViewModel extends BaseViewModel {
     setBusy(false);
   }
 
-  // Future<void> checkAttendance() async {
-  //   if (userLocation == null || attendancePointNearest == null) {
-  //     setError('Lokasi atau titik absensi tidak tersedia');
-  //     notifyListeners();
-  //     return;
-  //   }
-
-  //   // Konversi koordinat dari nearest point
-  //   final pointLat = attendancePointNearest!.latitude;
-  //   final pointLng = attendancePointNearest!.longitude;
-  //   final radius = attendancePointNearest!.radius; // default 50 m
-
-  //   // Hitung jarak user ke titik absensi (meter)
-  //   final distance = Geolocator.distanceBetween(
-  //     userLocation!.latitude,
-  //     userLocation!.longitude,
-  //     pointLat,
-  //     pointLng,
-  //   );
-
-  //   if (distance <= radius) {
-  //     isLoadingPressed = true;
-  //     notifyListeners();
-  //     try {
-  //       final response = await attendanceApi.attendance(
-  //         request: AttendanceRequest(
-  //           attendancePointId: attendancePointNearest!.id,
-  //           latitude: userLocation!.latitude,
-  //           longitude: userLocation!.longitude,
-  //         ),
-  //       );
-
-  //       if (response.response.statusCode == 200) {
-  //         final attendanceResponse = response.data;
-  //         setSuccess(attendanceResponse.message);
-  //       }
-  //     } on DioException catch (e) {
-  //       final apiResponse = ApiResponse.fromJson(e.response!.data);
-  //       setError(apiResponse.message);
-  //     }
-  //     isLoadingPressed = false;
-  //     notifyListeners();
-  //   } else {
-  //     String distanceText;
-  //     if (distance >= 1000) {
-  //       distanceText = '${(distance / 1000).toStringAsFixed(1)} km';
-  //     } else {
-  //       distanceText = '${distance.round()} m';
-  //     }
-  //     setError('Jarak anda terlalu jauh ($distanceText)');
-  //   }
-  //   isLoadingPressed = false;
-  //   notifyListeners();
-  // }
-
   Future<void> checkAttendance() async {
+    if (isMockLocationDetected) {
+      setError('Lokasi palsu terdeteksi, absen tidak dapat dilakukan.');
+      return;
+    }
+
     if (userLocation == null || attendancePointNearest == null) {
       setError('Lokasi atau titik absensi tidak tersedia');
       return;
@@ -182,7 +146,7 @@ class AttendanceViewModel extends BaseViewModel {
       return;
     }
 
-    // Dalam radius → panggil API
+    // lanjutkan absensi jika aman
     isLoadingPressed = true;
     notifyListeners();
 
@@ -215,7 +179,6 @@ class AttendanceViewModel extends BaseViewModel {
     selectedMarkerRadius = point.radius;
     notifyListeners();
   }
-
 
   void zoomIn() {
     currentZoom += 1;

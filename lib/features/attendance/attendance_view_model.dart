@@ -52,17 +52,40 @@ class AttendanceViewModel extends BaseViewModel {
 
   Future<void> fetchCurrentLocation() async {
     try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        errorMessage = 'Layanan lokasi dinonaktifkan.';
+        notifyListeners();
+        return;
+      }
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          errorMessage = 'Izin lokasi ditolak.';
+          notifyListeners();
+          return;
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        errorMessage = 'Izin lokasi ditolak secara permanen, tidak dapat meminta izin.';
+        notifyListeners();
+        return;
+      }
+
       final position = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
       );
 
-      // 🔍 Deteksi lokasi palsu
-      if (position.isMocked) {
-        isMockLocationDetected = true;
-        errorMessage = "Lokasi terdeteksi palsu (Fake GPS aktif)";
-        notifyListeners();
-        return;
-      }
+      // 🔍 Deteksi lokasi palsu (DI-BYPASS SEMENTARA UNTUK SIMULATOR)
+      // if (position.isMocked) {
+      //   isMockLocationDetected = true;
+      //   errorMessage = "Lokasi terdeteksi palsu (Fake GPS aktif)";
+      //   notifyListeners();
+      //   return;
+      // }
 
       // Jika lokasi valid
       isMockLocationDetected = false;
@@ -79,6 +102,7 @@ class AttendanceViewModel extends BaseViewModel {
   }
 
   Future<void> fetchAttendancePointNearest() async {
+    if (latitude == null || longitude == null) return;
     setBusy(true);
     try {
       final response = await attendancePointApi.attendancePointNearest(

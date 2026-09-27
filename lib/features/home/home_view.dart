@@ -29,7 +29,10 @@ class HomeView extends StatelessWidget {
       onModelReady: (HomeViewModel model) => model.initModel(),
       onModelDispose: (HomeViewModel model) => model.disposeModel(),
       builder: (BuildContext context, HomeViewModel model, _) {
-        return Scaffold(backgroundColor: AppColors.white, body: _buildBody(context, model));
+        return Scaffold(
+          backgroundColor: AppColors.white,
+          body: _buildBody(context, model),
+        );
       },
     );
   }
@@ -57,7 +60,7 @@ Widget _buildBody(BuildContext context, HomeViewModel model) {
     child: SafeArea(
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.only(bottom: 32),
+
         children: [
           // Top User Profile Bar
           Container(
@@ -80,7 +83,9 @@ Widget _buildBody(BuildContext context, HomeViewModel model) {
                       ),
                       child: Center(
                         child: Text(
-                          model.name.isNotEmpty ? model.name.substring(0, 1).toUpperCase() : 'U',
+                          model.name.isNotEmpty
+                              ? model.name.substring(0, 1).toUpperCase()
+                              : 'U',
                           style: AppFonts.h3.copyWith(color: AppColors.primary),
                         ),
                       ),
@@ -118,22 +123,33 @@ Widget _buildBody(BuildContext context, HomeViewModel model) {
                         height: 16,
                         isLoading: model.isBusy,
                         text: model.name.isNotEmpty ? model.name : 'Pengguna',
-                        style: AppFonts.semiBold.copyWith(color: AppColors.textDark, fontSize: 15),
+                        style: AppFonts.semiBold.copyWith(
+                          color: AppColors.textDark,
+                          fontSize: 15,
+                        ),
                       ),
                     ],
                   ),
                 ),
                 if (model.role.isNotEmpty)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.primarySubtle,
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+                      border: Border.all(
+                        color: AppColors.primary.withValues(alpha: 0.3),
+                      ),
                     ),
                     child: Text(
                       model.role.toUpperCase(),
-                      style: AppFonts.badge.copyWith(color: AppColors.primaryDark, fontSize: 10),
+                      style: AppFonts.badge.copyWith(
+                        color: AppColors.primaryDark,
+                        fontSize: 10,
+                      ),
                     ),
                   ),
               ],
@@ -216,7 +232,9 @@ Widget _buildBody(BuildContext context, HomeViewModel model) {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          model.title.isNotEmpty ? model.title : 'Selamat Datang di SIM Presensi',
+                          model.title.isNotEmpty
+                              ? model.title
+                              : 'Selamat Datang di SIM Presensi',
                           style: AppFonts.bold.copyWith(
                             color: AppColors.white,
                             fontSize: 18,
@@ -249,7 +267,10 @@ Widget _buildBody(BuildContext context, HomeViewModel model) {
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Text(
               'Menu Layanan',
-              style: AppFonts.semiBold.copyWith(color: AppColors.textDark, fontSize: 16),
+              style: AppFonts.semiBold.copyWith(
+                color: AppColors.textDark,
+                fontSize: 16,
+              ),
             ),
           ),
 
@@ -274,7 +295,9 @@ Widget _buildBody(BuildContext context, HomeViewModel model) {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const AttendanceView()),
+                      MaterialPageRoute(
+                        builder: (context) => const AttendanceView(),
+                      ),
                     );
                   },
                 ),
@@ -286,7 +309,9 @@ Widget _buildBody(BuildContext context, HomeViewModel model) {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const LeaveView()),
+                      MaterialPageRoute(
+                        builder: (context) => const LeaveView(),
+                      ),
                     );
                   },
                 ),
@@ -298,7 +323,9 @@ Widget _buildBody(BuildContext context, HomeViewModel model) {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const ScheduleView()),
+                      MaterialPageRoute(
+                        builder: (context) => const ScheduleView(),
+                      ),
                     );
                   },
                 ),
@@ -310,7 +337,9 @@ Widget _buildBody(BuildContext context, HomeViewModel model) {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const EventView()),
+                      MaterialPageRoute(
+                        builder: (context) => const EventView(),
+                      ),
                     );
                   },
                 ),
@@ -322,7 +351,9 @@ Widget _buildBody(BuildContext context, HomeViewModel model) {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const HistoryView()),
+                      MaterialPageRoute(
+                        builder: (context) => const HistoryView(),
+                      ),
                     );
                   },
                 ),
@@ -334,7 +365,9 @@ Widget _buildBody(BuildContext context, HomeViewModel model) {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const ProfileView()),
+                      MaterialPageRoute(
+                        builder: (context) => const ProfileView(),
+                      ),
                     );
                   },
                 ),
@@ -344,9 +377,12 @@ Widget _buildBody(BuildContext context, HomeViewModel model) {
 
           Builder(
             builder: (context) {
-              final validEvents = model.events
-                  .where((e) => e.imageUrl != null && e.imageUrl!.isNotEmpty)
-                  .toList();
+              final validEvents =
+                  model.events
+                      .where(
+                        (e) => e.imageUrl != null && e.imageUrl!.isNotEmpty,
+                      )
+                      .toList();
 
               if (validEvents.isEmpty) return const SizedBox.shrink();
 
@@ -361,18 +397,26 @@ Widget _buildBody(BuildContext context, HomeViewModel model) {
                       children: [
                         Text(
                           'Event & Informasi',
-                          style: AppFonts.semiBold.copyWith(color: AppColors.textDark, fontSize: 16),
+                          style: AppFonts.semiBold.copyWith(
+                            color: AppColors.textDark,
+                            fontSize: 16,
+                          ),
                         ),
                         GestureDetector(
                           onTap: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => const EventView()),
+                              MaterialPageRoute(
+                                builder: (context) => const EventView(),
+                              ),
                             );
                           },
                           child: Text(
                             'Lihat Semua',
-                            style: AppFonts.semiBold.copyWith(color: AppColors.primary, fontSize: 13),
+                            style: AppFonts.semiBold.copyWith(
+                              color: AppColors.primary,
+                              fontSize: 13,
+                            ),
                           ),
                         ),
                       ],
@@ -385,7 +429,9 @@ Widget _buildBody(BuildContext context, HomeViewModel model) {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => EventDetailView(event: validEvents[index]),
+                          builder:
+                              (context) =>
+                                  EventDetailView(event: validEvents[index]),
                         ),
                       );
                     },
@@ -426,13 +472,19 @@ Widget menuTile({
             Container(
               width: 48,
               height: 48,
-              decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(15)),
+              decoration: BoxDecoration(
+                color: bgColor,
+                borderRadius: BorderRadius.circular(15),
+              ),
               child: Icon(icon, color: iconColor, size: 24),
             ),
             const SizedBox(height: 10),
             Text(
               title,
-              style: AppFonts.medium.copyWith(color: AppColors.textDark, fontSize: 13),
+              style: AppFonts.medium.copyWith(
+                color: AppColors.textDark,
+                fontSize: 13,
+              ),
               textAlign: TextAlign.center,
             ),
           ],

@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter_udid/flutter_udid.dart';
 import 'package:absensi_app/core/api/auth_api.dart';
@@ -17,14 +18,15 @@ class SplashViewModel extends BaseViewModel {
   Future<void> initModel() async {
     setBusy(true);
 
-    // 1. Cek permission
-    hasPermission = await _checkPermissions();
+    // 1. Cek token + device terlebih dahulu
+    isDeviceValid = await validateDevice();
 
-    // 2. Cek token + device
-    if (hasPermission) {
-      isDeviceValid = await validateDevice();
+    // 2. Cek permission hanya jika sudah login/device valid
+    // Atau bisa juga tidak memblokir flow login jika permission gagal
+    if (isDeviceValid) {
+      hasPermission = await _checkPermissions();
     } else {
-      isDeviceValid = false;
+      hasPermission = true; // Supaya tidak muncul snackbar error permission di halaman login
     }
 
     // 3. Delay untuk efek splash
@@ -62,15 +64,17 @@ class SplashViewModel extends BaseViewModel {
       if (!result.isGranted) return false;
     }
 
-    // Cek storage
-    final storageStatus = await Permission.storage.status;
-    if (!storageStatus.isGranted) {
-      final result = await Permission.manageExternalStorage.request();
-      if (result.isPermanentlyDenied) {
-        openAppSettings();
-        return false;
+    // Cek storage (Hanya untuk Android)
+    if (Platform.isAndroid) {
+      final storageStatus = await Permission.storage.status;
+      if (!storageStatus.isGranted) {
+        final result = await Permission.manageExternalStorage.request();
+        if (result.isPermanentlyDenied) {
+          openAppSettings();
+          return false;
+        }
+        if (!result.isGranted) return false;
       }
-      if (!result.isGranted) return false;
     }
 
     return true;

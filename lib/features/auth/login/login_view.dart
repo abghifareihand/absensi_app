@@ -44,7 +44,7 @@ Widget _buildBody(BuildContext context, LoginViewModel model) {
             ),
             const SizedBox(height: 28),
             Text(
-              'Selamat Datang 👋',
+              'Selamat Datang',
               style: AppFonts.h1.copyWith(color: AppColors.textDark, fontSize: 24),
             ),
             const SizedBox(height: 6),

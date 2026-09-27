@@ -8,10 +8,10 @@ part of 'title_model.dart';
 
 TitleResponse _$TitleResponseFromJson(Map<String, dynamic> json) =>
     TitleResponse(
-      status: json['status'] as bool,
-      message: json['message'] as String,
-      title: json['title'] as String,
-      subtitle: json['subtitle'] as String,
+      status: json['status'] as bool?,
+      message: json['message'] as String?,
+      title: json['title'] as String?,
+      subtitle: json['subtitle'] as String?,
     );
 
 Map<String, dynamic> _$TitleResponseToJson(TitleResponse instance) =>

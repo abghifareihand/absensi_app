@@ -5,19 +5,19 @@ part 'title_model.g.dart';
 @JsonSerializable(fieldRename: FieldRename.snake)
 class TitleResponse {
   const TitleResponse({
-    required this.status,
-    required this.message,
-    required this.title,
-    required this.subtitle,
+    this.status,
+    this.message,
+    this.title,
+    this.subtitle,
   });
 
   factory TitleResponse.fromJson(Map<String, dynamic> json) =>
       _$TitleResponseFromJson(json);
 
-  final bool status;
-  final String message;
-  final String title;
-  final String subtitle;
+  final bool? status;
+  final String? message;
+  final String? title;
+  final String? subtitle;
 
   Map<String, dynamic> toJson() => _$TitleResponseToJson(this);
 }

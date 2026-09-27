@@ -23,7 +23,14 @@ class ShimmerName extends StatelessWidget {
       return Shimmer.fromColors(
         baseColor: Colors.grey.shade300,
         highlightColor: Colors.grey.shade100,
-        child: Container(width: width, height: height, color: Colors.white),
+        child: Container(
+          width: width,
+          height: height,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(6),
+          ),
+        ),
       );
     } else {
       return Text(text ?? '', style: style);

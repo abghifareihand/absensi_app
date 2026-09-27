@@ -1,6 +1,5 @@
 import 'package:absensi_app/core/api/attendance_api.dart';
 import 'package:absensi_app/core/api/attendance_point_api.dart';
-import 'package:absensi_app/core/assets/assets.gen.dart';
 import 'package:absensi_app/features/base_view.dart';
 import 'package:absensi_app/features/attendance/attendance_view_model.dart';
 import 'package:absensi_app/ui/shared/custom_button.dart';
@@ -25,7 +24,10 @@ class AttendanceView extends StatelessWidget {
       onModelReady: (AttendanceViewModel model) => model.initModel(),
       onModelDispose: (AttendanceViewModel model) => model.disposeModel(),
       builder: (BuildContext context, AttendanceViewModel model, _) {
-        return Scaffold(backgroundColor: AppColors.white, body: _buildBody(context, model));
+        return Scaffold(
+          backgroundColor: AppColors.background,
+          body: _buildBody(context, model),
+        );
       },
     );
   }
@@ -34,30 +36,82 @@ class AttendanceView extends StatelessWidget {
 Widget _buildBody(BuildContext context, AttendanceViewModel model) {
   if (model.isBusy) {
     return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          CircularProgressIndicator(),
-          SizedBox(height: 12),
-          Text(
-            'Mendapatkan lokasi...',
-            style: AppFonts.medium.copyWith(color: AppColors.primary, fontSize: 12),
-          ),
-        ],
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppColors.border),
+          boxShadow: AppColors.cardShadow,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(
+              width: 32,
+              height: 32,
+              child: CircularProgressIndicator(strokeWidth: 3, color: AppColors.primary),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Menghubungkan GPS...',
+              style: AppFonts.semiBold.copyWith(color: AppColors.textDark, fontSize: 14),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Mohon tunggu sebentar',
+              style: AppFonts.caption.copyWith(color: AppColors.textSecondary, fontSize: 12),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   if (model.userLocation == null) {
     return Center(
-      child: Text(
-        model.errorMessage.isNotEmpty ? model.errorMessage : "Lokasi tidak ditemukan",
-        style: AppFonts.medium.copyWith(color: Colors.red, fontSize: 12),
+      child: Container(
+        margin: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppColors.border),
+          boxShadow: AppColors.cardShadow,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.location_off_rounded, size: 48, color: AppColors.red),
+            const SizedBox(height: 16),
+            Text(
+              'Lokasi Tidak Ditemukan',
+              style: AppFonts.semiBold.copyWith(color: AppColors.textDark, fontSize: 16),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              model.errorMessage.isNotEmpty ? model.errorMessage : "Pastikan izin lokasi telah diaktifkan.",
+              textAlign: TextAlign.center,
+              style: AppFonts.caption.copyWith(color: AppColors.textSecondary, fontSize: 13),
+            ),
+            const SizedBox(height: 20),
+            Button.filled(
+              onPressed: () => model.initModel(),
+              label: 'Coba Lagi',
+              height: 44,
+              borderRadius: 12,
+            ),
+          ],
+        ),
       ),
     );
   }
+
+  final nearestPointName = model.attendancePointNearest?.name ?? 'Memeriksa lokasi...';
+
   return Stack(
     children: [
+      // Peta
       FlutterMap(
         mapController: model.mapController,
         options: MapOptions(
@@ -77,25 +131,28 @@ Widget _buildBody(BuildContext context, AttendanceViewModel model) {
             tileProvider: FMTCStore('mapStore').getTileProvider(),
           ),
 
-          // Marker User
+          // Marker User Location
           MarkerLayer(
             markers: [
               Marker(
                 point: model.userLocation!,
-                width: 18,
-                height: 18,
+                width: 32,
+                height: 32,
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.blue,
+                    color: AppColors.blue,
                     shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 2),
+                    border: Border.all(color: Colors.white, width: 3),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.3),
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
+                        color: AppColors.blue.withValues(alpha: 0.4),
+                        blurRadius: 10,
+                        spreadRadius: 2,
                       ),
                     ],
+                  ),
+                  child: const Center(
+                    child: Icon(Icons.person_rounded, color: Colors.white, size: 16),
                   ),
                 ),
               ),
@@ -104,51 +161,128 @@ Widget _buildBody(BuildContext context, AttendanceViewModel model) {
 
           // Marker Titik Absen
           MarkerLayer(
-            markers:
-                model.attendancePoints.map((point) {
-                  return Marker(
-                    point: LatLng(point.latitude, point.longitude),
-                    width: 32,
-                    height: 32,
-                    child: GestureDetector(
-                      onTap: () => model.selectMarker(point),
-                      child: Assets.svg.iconLocation.svg(
-                        colorFilter: const ColorFilter.mode(Colors.red, BlendMode.srcIn),
+            markers: model.attendancePoints.map((point) {
+              final pointLatLng = LatLng(point.latitude, point.longitude);
+              final isSelected = model.selectedMarker == pointLatLng;
+              return Marker(
+                point: pointLatLng,
+                width: 44,
+                height: 44,
+                child: GestureDetector(
+                  onTap: () => model.selectMarker(point),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: isSelected ? AppColors.primary : AppColors.surface,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: isSelected ? Colors.white : AppColors.primary,
+                        width: 2,
                       ),
+                      boxShadow: AppColors.softShadow,
                     ),
-                  );
-                }).toList(),
+                    child: Icon(
+                      Icons.location_on_rounded,
+                      color: isSelected ? Colors.white : AppColors.primary,
+                      size: 20,
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
           ),
         ],
       ),
 
-      // Tampilkan peringatan Fake GPS
+      // Top Floating Header Bar
+      Positioned(
+        top: MediaQuery.of(context).padding.top + 10,
+        left: 16,
+        right: 16,
+        child: Row(
+          children: [
+            Material(
+              color: AppColors.surface,
+              shape: const CircleBorder(),
+              elevation: 2,
+              child: InkWell(
+                customBorder: const CircleBorder(),
+                onTap: () => Navigator.pop(context),
+                child: Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: const Icon(
+                    Icons.arrow_back_ios_new_rounded,
+                    size: 16,
+                    color: AppColors.textDark,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            if (model.selectedMarker != null)
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(30),
+                    border: Border.all(color: AppColors.border),
+                    boxShadow: AppColors.softShadow,
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          color: AppColors.primarySubtle,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.pin_drop_rounded, color: AppColors.primary, size: 14),
+                      ),
+                      const SizedBox(width: 8.0),
+                      Expanded(
+                        child: Text(
+                          '${model.selectedMarkerName}',
+                          style: AppFonts.semiBold.copyWith(color: AppColors.textDark, fontSize: 13),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+
+      // Peringatan Fake GPS Banner
       if (model.isMockLocationDetected)
         Positioned(
-          top: 100,
+          top: MediaQuery.of(context).padding.top + 64,
           left: 16,
           right: 16,
           child: Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: Colors.red[100],
-              borderRadius: BorderRadius.circular(8),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+              color: AppColors.redSubtle,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.red, width: 1.5),
+              boxShadow: AppColors.softShadow,
             ),
             child: Row(
               children: [
-                Icon(Icons.warning_amber_rounded, color: Colors.red[700]),
-                const SizedBox(width: 8),
+                const Icon(Icons.warning_amber_rounded, color: AppColors.red, size: 22),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    model.errorMessage,
-                    style: AppFonts.medium.copyWith(color: Colors.red[900], fontSize: 13),
+                    model.errorMessage.isNotEmpty ? model.errorMessage : 'Fake GPS terdeteksi! Harap gunakan GPS asli.',
+                    style: AppFonts.medium.copyWith(color: AppColors.red, fontSize: 12),
                   ),
                 ),
               ],
@@ -156,226 +290,162 @@ Widget _buildBody(BuildContext context, AttendanceViewModel model) {
           ),
         ),
 
-      /// Tombol Back di kiri atas
+      // Floating Map Action Buttons (Right Side)
       Positioned(
-        top: 40,
-        left: 16,
+        bottom: 220,
         right: 16,
-        child: Row(
-          children: [
-            // Tombol back
-            GestureDetector(
-              onTap: () => Navigator.pop(context),
-              child: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppColors.white,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 6,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: Assets.svg.iconBack.svg(),
+        child: Container(
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.border),
+            boxShadow: AppColors.softShadow,
+          ),
+          child: Column(
+            children: [
+              IconButton(
+                onPressed: model.zoomIn,
+                icon: const Icon(Icons.add_rounded, color: AppColors.textDark),
+                tooltip: 'Perbesar',
               ),
-            ),
+              Container(width: 24, height: 1, color: AppColors.border),
+              IconButton(
+                onPressed: model.zoomOut,
+                icon: const Icon(Icons.remove_rounded, color: AppColors.textDark),
+                tooltip: 'Perkecil',
+              ),
+              Container(width: 24, height: 1, color: AppColors.border),
+              IconButton(
+                onPressed: model.moveToCurrentLocation,
+                icon: const Icon(Icons.my_location_rounded, color: AppColors.primary),
+                tooltip: 'Lokasi Saya',
+              ),
+            ],
+          ),
+        ),
+      ),
 
-            const SizedBox(width: 12),
-
-            // Container untuk info marker
-            if (model.selectedMarker != null)
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      // Floating Status Toast Message
+      Positioned(
+        bottom: 215,
+        left: 20,
+        right: 80,
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          child: model.message.isNotEmpty
+              ? Container(
+                  key: const ValueKey("visible"),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   decoration: BoxDecoration(
-                    color: AppColors.white,
-                    borderRadius: BorderRadius.circular(50),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1),
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
+                    color: model.error ? AppColors.redSubtle : AppColors.greenSubtle,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: model.error ? AppColors.red : AppColors.green,
+                    ),
+                    boxShadow: AppColors.softShadow,
                   ),
                   child: Row(
                     children: [
-                      Assets.svg.iconLocation.svg(
-                        width: 18,
-                        height: 18,
-                        colorFilter: const ColorFilter.mode(AppColors.primary, BlendMode.srcIn),
+                      Icon(
+                        model.error ? Icons.error_outline_rounded : Icons.check_circle_outline_rounded,
+                        color: model.error ? AppColors.red : AppColors.green,
+                        size: 20,
                       ),
-                      const SizedBox(width: 8.0),
-                      Text(
-                        '${model.selectedMarkerName}',
-                        style: AppFonts.semiBold.copyWith(color: AppColors.primary, fontSize: 16),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          model.message,
+                          style: AppFonts.medium.copyWith(
+                            color: model.error ? AppColors.red : AppColors.primaryDark,
+                            fontSize: 12,
+                          ),
+                        ),
                       ),
                     ],
                   ),
-                ),
-              ),
-          ],
+                )
+              : const SizedBox.shrink(key: ValueKey("hidden")),
         ),
       ),
 
-      // ======= DRAGGABLE BOTTOM SHEET =======
-      DraggableScrollableSheet(
-        initialChildSize: 0.2,
-        minChildSize: 0.2,
-        maxChildSize: 0.2,
-        builder: (context, scrollController) {
-          return Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-              boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 4)],
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  Text(
-                    'Absen di ${model.attendancePointNearest!.name}',
-                    style: AppFonts.semiBold.copyWith(color: AppColors.black, fontSize: 16),
-                  ),
-
-                  Text(
-                    'Tekan tombol di bawah untuk Check-in / Check-out',
-                    style: AppFonts.medium.copyWith(color: AppColors.black, fontSize: 12),
-                  ),
-                  Spacer(),
-                  Button.filled(
-                    onPressed:
-                        model.isMockLocationDetected
-                            ? null
-                            : () async {
-                              await model.checkAttendance();
-                            },
-                    label: model.isMockLocationDetected ? 'Fake GPS Terdeteksi' : 'Absen',
-                    isLoading: model.isLoadingPressed,
-                    color: model.isMockLocationDetected ? Colors.grey : AppColors.primary,
-                  ),
-                  const SizedBox(height: 16.0),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-
+      // Bottom Attendance Action Card
       Positioned(
-        bottom: 0.2 * MediaQuery.of(context).size.height + 8,
-        left: 16,
-        right: 16,
-        child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 300),
-          child:
-              model.message.isNotEmpty
-                  ? Container(
-                    key: const ValueKey("visible"),
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: model.error ? Colors.red[100] : Colors.green[100],
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          model.error ? Icons.error : Icons.check_circle,
-                          color: model.error ? Colors.red : Colors.green,
-                          size: 18,
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            model.message,
-                            style: AppFonts.medium.copyWith(
-                              color: model.error ? Colors.red[900] : Colors.green[900],
-                              fontSize: 12,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                  : const SizedBox.shrink(
-                    key: ValueKey("hidden"), // 👈 key saat kosong
-                  ),
-        ),
-      ),
-
-      // ======= END DRAGGABLE BOTTOM SHEET =======
-      Positioned(
-        bottom: 0.2 * MediaQuery.of(context).size.height + 52,
-        left: 16,
-        right: 16,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            Column(
+        bottom: 0,
+        left: 0,
+        right: 0,
+        child: Container(
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            border: Border.all(color: AppColors.border, width: 1),
+            boxShadow: AppColors.floatShadow,
+          ),
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                GestureDetector(
-                  onTap: model.zoomIn,
+                Center(
                   child: Container(
-                    padding: const EdgeInsets.all(8),
+                    width: 36,
+                    height: 4,
                     decoration: BoxDecoration(
-                      color: AppColors.white,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.1),
-                          blurRadius: 6,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
+                      color: AppColors.border,
+                      borderRadius: BorderRadius.circular(2),
                     ),
-                    child: Icon(Icons.add),
                   ),
                 ),
-                const SizedBox(height: 8.0),
-                GestureDetector(
-                  onTap: model.zoomOut,
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppColors.white,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.1),
-                          blurRadius: 6,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: AppColors.primarySubtle,
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: const Icon(Icons.location_city_rounded, color: AppColors.primary, size: 22),
                     ),
-                    child: Icon(Icons.remove),
-                  ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Lokasi Presensi Terdekat',
+                            style: AppFonts.caption.copyWith(color: AppColors.textSecondary, fontSize: 11),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            nearestPointName,
+                            style: AppFonts.semiBold.copyWith(color: AppColors.textDark, fontSize: 15),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 8.0),
-                GestureDetector(
-                  onTap: model.moveToCurrentLocation,
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppColors.white,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.1),
-                          blurRadius: 6,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
-                    ),
-                    child: Icon(Icons.my_location),
-                  ),
+                const SizedBox(height: 16),
+                Button.filled(
+                  height: 52,
+                  borderRadius: 16,
+                  icon: const Icon(Icons.fingerprint_rounded, color: AppColors.white, size: 22),
+                  onPressed: model.isMockLocationDetected
+                      ? null
+                      : () async {
+                          await model.checkAttendance();
+                        },
+                  label: model.isMockLocationDetected ? 'Fake GPS Terdeteksi' : 'Catat Kehadiran Sekarang',
+                  isLoading: model.isLoadingPressed,
+                  color: model.isMockLocationDetected ? AppColors.textMuted : AppColors.primary,
                 ),
               ],
             ),
-          ],
+          ),
         ),
       ),
     ],

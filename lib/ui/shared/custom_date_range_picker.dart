@@ -69,32 +69,51 @@ class _CustomDateRangePickerState extends State<CustomDateRangePicker> {
               }
             });
           },
-          headerStyle: const HeaderStyle(formatButtonVisible: false, titleCentered: true),
+          headerStyle: HeaderStyle(
+            formatButtonVisible: false,
+            titleCentered: true,
+            titleTextStyle: AppFonts.semiBold.copyWith(
+              color: AppColors.textDark,
+              fontSize: 16,
+            ),
+            leftChevronIcon: const Icon(Icons.chevron_left_rounded, color: AppColors.textDark),
+            rightChevronIcon: const Icon(Icons.chevron_right_rounded, color: AppColors.textDark),
+          ),
           startingDayOfWeek: StartingDayOfWeek.monday,
           calendarStyle: CalendarStyle(
             outsideDaysVisible: false,
-            defaultTextStyle: AppFonts.medium.copyWith(color: AppColors.black, fontSize: 12),
-            weekendTextStyle: AppFonts.medium.copyWith(color: AppColors.black, fontSize: 12),
-            outsideTextStyle: AppFonts.medium.copyWith(color: Colors.red, fontSize: 12),
-            todayDecoration: BoxDecoration(shape: BoxShape.circle, color: Colors.red),
-            todayTextStyle: AppFonts.medium.copyWith(color: AppColors.white, fontSize: 12),
-            rangeStartDecoration: BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
-            rangeStartTextStyle: AppFonts.medium.copyWith(color: AppColors.white, fontSize: 12),
-            rangeEndDecoration: BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
-            rangeEndTextStyle: AppFonts.medium.copyWith(color: AppColors.white, fontSize: 12),
-            withinRangeTextStyle: AppFonts.medium.copyWith(color: AppColors.black, fontSize: 12),
-            rangeHighlightColor: AppColors.primary.withValues(alpha: 0.2),
+            defaultTextStyle: AppFonts.medium.copyWith(color: AppColors.textDark, fontSize: 13),
+            weekendTextStyle: AppFonts.medium.copyWith(color: AppColors.textSecondary, fontSize: 13),
+            outsideTextStyle: AppFonts.medium.copyWith(color: AppColors.textMuted, fontSize: 13),
+            todayDecoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.primarySubtle,
+              border: Border.all(color: AppColors.primary, width: 1.5),
+            ),
+            todayTextStyle: AppFonts.semiBold.copyWith(color: AppColors.primary, fontSize: 13),
+            rangeStartDecoration: const BoxDecoration(
+              color: AppColors.primary,
+              shape: BoxShape.circle,
+            ),
+            rangeStartTextStyle: AppFonts.semiBold.copyWith(color: AppColors.white, fontSize: 13),
+            rangeEndDecoration: const BoxDecoration(
+              color: AppColors.primary,
+              shape: BoxShape.circle,
+            ),
+            rangeEndTextStyle: AppFonts.semiBold.copyWith(color: AppColors.white, fontSize: 13),
+            withinRangeTextStyle: AppFonts.medium.copyWith(color: AppColors.primaryDark, fontSize: 13),
+            rangeHighlightColor: AppColors.primarySubtle,
           ),
         ),
-        SizedBox(height: 16),
+        const SizedBox(height: 20),
         Button.filled(
-          height: 46,
-          borderRadius: 12,
+          height: 48,
+          borderRadius: 14,
           fontSize: 14,
-          label: 'Pilih Tanggal',
+          label: 'Terapkan Tanggal',
           onPressed: (_rangeStart != null && _rangeEnd != null) ? _onConfirm : null,
         ),
-        SizedBox(height: 16),
+        const SizedBox(height: 12),
       ],
     );
   }
@@ -120,62 +139,97 @@ class CustomDateRangeField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasValue = displayText != null && displayText!.isNotEmpty;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: AppFonts.medium.copyWith(color: AppColors.black, fontSize: 14)),
+        Text(
+          label,
+          style: AppFonts.semiBold.copyWith(
+            color: AppColors.textDark,
+            fontSize: 13,
+          ),
+        ),
         const SizedBox(height: 8.0),
         GestureDetector(
           onTap: () {
             showModalBottomSheet(
-              backgroundColor: Colors.white,
+              backgroundColor: Colors.transparent,
               context: context,
               isScrollControlled: true,
-              shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),
+              builder: (context) => Container(
+                decoration: const BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(24.0)),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: AppColors.border,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    Text(
+                      'Pilih Rentang Tanggal',
+                      style: AppFonts.semiBold.copyWith(
+                        color: AppColors.textDark,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    CustomDateRangePicker(
+                      initialStart: initialStart,
+                      initialEnd: initialEnd,
+                      firstDay: firstDay,
+                      onConfirmPressed: (start, end) {
+                        onConfirm(DateTimeRange(start: start, end: end));
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ],
+                ),
               ),
-              builder:
-                  (context) => Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        CustomDateRangePicker(
-                          initialStart: initialStart,
-                          initialEnd: initialEnd,
-                          firstDay: firstDay,
-                          onConfirmPressed: (start, end) {
-                            onConfirm(DateTimeRange(start: start, end: end));
-                            Navigator.pop(context);
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
             );
           },
           child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
+            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: displayText != null ? AppColors.primary : AppColors.gray),
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: hasValue ? AppColors.primary : AppColors.border,
+                width: hasValue ? 1.5 : 1.0,
+              ),
             ),
             child: Row(
               children: [
-                Text(
-                  displayText ?? 'Pilih Tanggal',
-                  style: AppFonts.medium.copyWith(
-                    color: displayText == null ? AppColors.gray : AppColors.black,
-                    fontSize: 14,
+                Icon(
+                  Icons.calendar_today_rounded,
+                  size: 18,
+                  color: hasValue ? AppColors.primary : AppColors.textSecondary,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    hasValue ? displayText! : 'Pilih Rentang Tanggal',
+                    style: AppFonts.medium.copyWith(
+                      color: hasValue ? AppColors.textDark : AppColors.textMuted,
+                      fontSize: 14,
+                    ),
                   ),
                 ),
-                const SizedBox(width: 8),
-                const Spacer(),
-                Icon(Icons.calendar_today_outlined, color: AppColors.gray),
+                Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  color: hasValue ? AppColors.primary : AppColors.textMuted,
+                  size: 20,
+                ),
               ],
             ),
           ),

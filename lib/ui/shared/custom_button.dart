@@ -64,54 +64,92 @@ class Button extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final effectiveDisabled = disabled || isLoading || onPressed == null;
+
+    final content = Row(
+      mainAxisAlignment: mainAxisAlignment,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (isLoading) ...[
+          SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(
+              strokeWidth: 2.2,
+              color: style == ButtonStyleType.filled ? textColor : color,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Text(
+            'Memuat...',
+            style: AppFonts.semiBold.copyWith(
+              color: style == ButtonStyleType.filled ? textColor : color,
+              fontSize: fontSize,
+            ),
+          ),
+        ] else ...[
+          if (icon != null) ...[
+            icon!,
+            const SizedBox(width: 8),
+          ],
+          Flexible(
+            child: Text(
+              label,
+              style: AppFonts.semiBold.copyWith(
+                color: effectiveDisabled
+                    ? (style == ButtonStyleType.filled
+                        ? AppColors.white.withValues(alpha: 0.8)
+                        : AppColors.textMuted)
+                    : textColor,
+                fontSize: fontSize,
+              ),
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+            ),
+          ),
+          if (suffixIcon != null) ...[
+            const SizedBox(width: 8),
+            suffixIcon!,
+          ],
+        ],
+      ],
+    );
+
     return SizedBox(
       height: height,
       width: width,
-      child:
-          style == ButtonStyleType.filled
-              ? ElevatedButton(
-                onPressed: isLoading ? null : onPressed,
-                style: ElevatedButton.styleFrom(
-                  padding: padding,
-                  backgroundColor: color,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(borderRadius)),
+      child: style == ButtonStyleType.filled
+          ? ElevatedButton(
+              onPressed: effectiveDisabled ? null : onPressed,
+              style: ElevatedButton.styleFrom(
+                elevation: 0,
+                shadowColor: Colors.transparent,
+                padding: padding ?? const EdgeInsets.symmetric(horizontal: 16),
+                backgroundColor: color,
+                disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.4),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(borderRadius),
                 ),
-                child:
-                    isLoading
-                        ? SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: textColor),
-                        )
-                        : Text(
-                          label,
-                          style: AppFonts.semiBold.copyWith(color: textColor, fontSize: fontSize),
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.center,
-                        ),
-              )
-              : OutlinedButton(
-                onPressed: isLoading ? null : onPressed,
-                style: OutlinedButton.styleFrom(
-                  padding: padding,
-                  backgroundColor: color,
-                  side: BorderSide(color: sideColor),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(borderRadius)),
-                ),
-                child:
-                    isLoading
-                        ? SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: textColor),
-                        )
-                        : Text(
-                          label,
-                          style: AppFonts.semiBold.copyWith(color: textColor, fontSize: fontSize),
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.center,
-                        ),
               ),
+              child: content,
+            )
+          : OutlinedButton(
+              onPressed: effectiveDisabled ? null : onPressed,
+              style: OutlinedButton.styleFrom(
+                elevation: 0,
+                padding: padding ?? const EdgeInsets.symmetric(horizontal: 16),
+                backgroundColor: color,
+                disabledBackgroundColor: Colors.transparent,
+                side: BorderSide(
+                  color: effectiveDisabled ? AppColors.border : sideColor,
+                  width: 1.5,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(borderRadius),
+                ),
+              ),
+              child: content,
+            ),
     );
   }
 }

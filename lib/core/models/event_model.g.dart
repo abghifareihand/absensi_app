@@ -8,11 +8,11 @@ part of 'event_model.dart';
 
 EventResponse _$EventResponseFromJson(Map<String, dynamic> json) =>
     EventResponse(
-      status: json['status'] as bool,
-      message: json['message'] as String,
+      status: json['status'] as bool?,
+      message: json['message'] as String?,
       data:
-          (json['data'] as List<dynamic>)
-              .map((e) => EventData.fromJson(e as Map<String, dynamic>))
+          (json['data'] as List<dynamic>?)
+              ?.map((e) => EventData.fromJson(e as Map<String, dynamic>))
               .toList(),
     );
 
@@ -24,12 +24,12 @@ Map<String, dynamic> _$EventResponseToJson(EventResponse instance) =>
     };
 
 EventData _$EventDataFromJson(Map<String, dynamic> json) => EventData(
-  id: (json['id'] as num).toInt(),
-  title: json['title'] as String,
-  description: json['description'] as String,
-  image: json['image'] as String,
-  imageUrl: json['image_url'] as String,
-  eventDate: json['event_date'] as String,
+  id: (json['id'] as num?)?.toInt(),
+  title: json['title'] as String?,
+  description: json['description'] as String?,
+  image: json['image'] as String?,
+  imageUrl: json['image_url'] as String?,
+  eventDate: json['event_date'] as String?,
 );
 
 Map<String, dynamic> _$EventDataToJson(EventData instance) => <String, dynamic>{

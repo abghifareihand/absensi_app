@@ -29,11 +29,17 @@ class EventViewModel extends BaseViewModel {
     try {
       final HttpResponse<EventResponse> response = await eventApi.events();
       if (response.response.statusCode == 200) {
-        events = response.data.data;
+        events = response.data.data ?? [];
       }
     } on DioException catch (e) {
-      final apiResponse = ApiResponse.fromJson(e.response!.data);
-      setError(apiResponse.message);
+      if (e.response?.data != null && e.response?.data is Map<String, dynamic>) {
+        final apiResponse = ApiResponse.fromJson(e.response!.data);
+        setError(apiResponse.message);
+      } else {
+        setError(e.message ?? 'Terjadi kesalahan');
+      }
+    } catch (e) {
+      setError(e.toString());
     }
     setBusy(false);
   }

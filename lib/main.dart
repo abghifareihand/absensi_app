@@ -31,20 +31,28 @@ class MyApp extends StatelessWidget {
             seedColor: AppColors.primary,
             primary: AppColors.primary,
             secondary: AppColors.primary,
+            surface: AppColors.surface,
           ),
-          scaffoldBackgroundColor: AppColors.white,
-          dialogTheme: const DialogTheme(elevation: 0),
+          scaffoldBackgroundColor: AppColors.background,
+          dialogTheme: DialogTheme(
+            elevation: 0,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            backgroundColor: AppColors.surface,
+          ),
           useMaterial3: true,
           appBarTheme: AppBarTheme(
-            backgroundColor: AppColors.white,
-            foregroundColor: AppColors.primary,
-            titleTextStyle: AppFonts.medium.copyWith(
-              color: AppColors.primary,
+            backgroundColor: AppColors.surface,
+            foregroundColor: AppColors.textDark,
+            elevation: 0,
+            scrolledUnderElevation: 1,
+            centerTitle: true,
+            titleTextStyle: AppFonts.semiBold.copyWith(
+              color: AppColors.textDark,
               fontSize: 16,
             ),
           ),
-          snackBarTheme: SnackBarThemeData(
-            contentTextStyle: const TextStyle(color: AppColors.white),
+          snackBarTheme: const SnackBarThemeData(
+            contentTextStyle: TextStyle(color: AppColors.white),
             behavior: SnackBarBehavior.floating,
           ),
         ),

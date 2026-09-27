@@ -13,25 +13,29 @@ class Formatter {
 
   /// Format tanggal menjadi "Senin, 11 September 2025"
   static String toReadableDateOnly(String dateString) {
-    final date = DateTime.parse(dateString);
+    final date = DateTime.tryParse(dateString);
+    if (date == null) return dateString;
     final formatter = DateFormat('dd MMMM yyyy', 'id_ID');
     return formatter.format(date);
   }
 
   static String toReadableDate(String dateString) {
-    final date = DateTime.parse(dateString);
+    final date = DateTime.tryParse(dateString);
+    if (date == null) return dateString;
     final formatter = DateFormat('EEEE, dd MMMM yyyy', 'id_ID');
     return formatter.format(date);
   }
 
   static String toReadableTime(String dateString) {
-    final date = DateTime.parse(dateString);
+    final date = DateTime.tryParse(dateString);
+    if (date == null) return dateString;
     final formatter = DateFormat('HH:mm', 'id_ID');
     return formatter.format(date);
   }
 
   static String toReadableDateTime(String dateString) {
-    final date = DateTime.parse(dateString);
+    final date = DateTime.tryParse(dateString);
+    if (date == null) return dateString;
     final formatter = DateFormat('EEEE, dd MMMM yyyy HH:mm', 'id_ID');
     return formatter.format(date);
   }

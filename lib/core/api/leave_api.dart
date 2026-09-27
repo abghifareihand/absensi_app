@@ -13,4 +13,11 @@ abstract class LeaveApi {
   Future<HttpResponse<LeaveResponse>> leaves({
     @Body() required FormData data,
   });
+
+  @GET('/api/leaves')
+  Future<HttpResponse<LeaveListResponse>> getLeaves({
+    @Query('status') String? status,
+    @Query('start_date') String? startDate,
+    @Query('end_date') String? endDate,
+  });
 }

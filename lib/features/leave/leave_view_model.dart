@@ -1,12 +1,8 @@
-import 'dart:io';
-
 import 'package:absensi_app/core/api/leave_api.dart';
 import 'package:absensi_app/core/models/api_model.dart';
 import 'package:absensi_app/core/models/leave_model.dart';
 import 'package:absensi_app/features/base_view_model.dart';
 import 'package:dio/dio.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:retrofit/retrofit.dart';
 
@@ -14,107 +10,98 @@ class LeaveViewModel extends BaseViewModel {
   LeaveViewModel({required this.leaveApi});
   final LeaveApi leaveApi;
 
-  final TextEditingController reasonController = TextEditingController();
-  String reason = '';
-  String? reasonError;
-
-  // Date Range
-  DateTime? selectedStartDate;
-  DateTime? selectedEndDate;
-  String? dateRange;
-
-  // File attachment
-  File? attachmentFile;
-  String? attachmentName;
-  String? attachmentError;
+  // History List & Filter State
+  List<LeaveData> leaves = [];
+  bool isHistoryLoading = false;
+  String selectedStatusFilter = 'all'; // 'all', 'pending', 'approved', 'rejected'
+  DateTime? filterStartDate;
+  DateTime? filterEndDate;
 
   @override
   Future<void> initModel() async {
     setBusy(true);
+    await fetchLeaves();
     super.initModel();
     setBusy(false);
   }
 
   @override
   Future<void> disposeModel() async {
-    reasonController.dispose();
     super.disposeModel();
   }
 
-  bool get isFormValid =>
-      selectedStartDate != null &&
-      selectedEndDate != null &&
-      reason.isNotEmpty &&
-      attachmentFile != null;
+  Future<void> fetchLeaves() async {
+    isHistoryLoading = true;
+    notifyListeners();
+    try {
+      final dateFormat = DateFormat('yyyy-MM-dd');
+      final statusParam = selectedStatusFilter == 'all' ? null : selectedStatusFilter;
+      final startParam = filterStartDate != null ? dateFormat.format(filterStartDate!) : null;
+      final endParam = filterEndDate != null ? dateFormat.format(filterEndDate!) : null;
 
-  Future<void> pickAttachment() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
-    );
+      final HttpResponse<LeaveListResponse> response = await leaveApi.getLeaves(
+        status: statusParam,
+        startDate: startParam,
+        endDate: endParam,
+      );
 
-    if (result != null && result.files.single.path != null) {
-      final path = result.files.single.path!;
-      final extension = path.split('.').last.toLowerCase();
-
-      if (!['pdf', 'jpg', 'jpeg', 'png'].contains(extension)) {
-        attachmentError = 'Format file tidak didukung';
-        notifyListeners();
-        return;
+      if (response.response.statusCode == 200) {
+        leaves = response.data.data;
       }
-
-      attachmentFile = File(path);
-      attachmentName = result.files.single.name;
-      attachmentError = null;
+    } on DioException catch (e) {
+      if (e.response?.data != null) {
+        final apiResponse = ApiResponse.fromJson(e.response!.data);
+        setError(apiResponse.message);
+      } else {
+        setError('Gagal memuat riwayat izin');
+      }
+    } catch (_) {
+      setError('Terjadi kesalahan memuat riwayat izin');
+    } finally {
+      isHistoryLoading = false;
       notifyListeners();
     }
   }
 
-  void clearAttachment() {
-    attachmentFile = null;
-    attachmentName = null;
-    attachmentError = null;
+  void setStatusFilter(String status) {
+    if (selectedStatusFilter == status && !isHistoryLoading) return;
+    selectedStatusFilter = status;
+    leaves = []; // Reset list agar langsung tampil loading
+    isHistoryLoading = true;
     notifyListeners();
+    fetchLeaves();
   }
 
-  void updateReason(String value) {
-    reason = value;
-    reasonError = reason.isEmpty ? 'Keperluan tidak boleh kosong' : null;
+  void setDateFilter(DateTime? start, DateTime? end) {
+    filterStartDate = start;
+    filterEndDate = end;
+    leaves = [];
+    isHistoryLoading = true;
     notifyListeners();
+    fetchLeaves();
   }
 
-  void setDateRange(DateTime start, DateTime end) {
-    selectedStartDate = start;
-    selectedEndDate = end;
-    dateRange = "${start.day}/${start.month}/${start.year} - ${end.day}/${end.month}/${end.year}";
+  void clearDateFilter() {
+    filterStartDate = null;
+    filterEndDate = null;
+    leaves = [];
+    isHistoryLoading = true;
     notifyListeners();
+    fetchLeaves();
   }
 
-  Future<void> addLeave() async {
-    setBusy(true);
+  int get pendingCount => leaves.where((l) => l.status.toLowerCase() == 'pending').length;
+  int get approvedCount => leaves.where((l) => l.status.toLowerCase() == 'approved').length;
+  int get rejectedCount => leaves.where((l) => l.status.toLowerCase() == 'rejected').length;
+
+  int calculateDays(String startStr, String endStr) {
     try {
-      final dateFormat = DateFormat('yyyy-MM-dd');
-      final HttpResponse<LeaveResponse> response = await leaveApi.leaves(
-        data: FormData.fromMap({
-          'start_date': dateFormat.format(selectedStartDate!),
-          'end_date': dateFormat.format(selectedEndDate!),
-          'reason': reason,
-          if (attachmentFile != null)
-            'attachment': await MultipartFile.fromFile(
-              attachmentFile!.path,
-              filename: attachmentName ?? attachmentFile!.path.split('/').last,
-            ),
-        }),
-      );
-      if (response.response.statusCode == 200) {
-        final addLeaveResponse = response.data;
-        setSuccess(addLeaveResponse.message);
-      }
-      setBusy(false);
-    } on DioException catch (e) {
-      final apiResponse = ApiResponse.fromJson(e.response!.data);
-      setError(apiResponse.message);
-      setBusy(false);
+      final start = DateTime.parse(startStr);
+      final end = DateTime.parse(endStr);
+      final diff = end.difference(start).inDays + 1;
+      return diff > 0 ? diff : 1;
+    } catch (_) {
+      return 1;
     }
   }
 }

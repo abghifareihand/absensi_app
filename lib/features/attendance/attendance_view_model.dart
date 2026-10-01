@@ -80,12 +80,12 @@ class AttendanceViewModel extends BaseViewModel {
       );
 
       // 🔍 Deteksi lokasi palsu (DI-BYPASS SEMENTARA UNTUK SIMULATOR)
-      // if (position.isMocked) {
-      //   isMockLocationDetected = true;
-      //   errorMessage = "Lokasi terdeteksi palsu (Fake GPS aktif)";
-      //   notifyListeners();
-      //   return;
-      // }
+      if (position.isMocked) {
+        isMockLocationDetected = true;
+        errorMessage = "Lokasi terdeteksi palsu (Fake GPS aktif)";
+        notifyListeners();
+        return;
+      }
 
       // Jika lokasi valid
       isMockLocationDetected = false;
